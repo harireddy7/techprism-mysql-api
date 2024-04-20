@@ -1,7 +1,8 @@
-import getConnection from '../db/connectToDB';
+import { getConnection } from '../db/connectToDB';
 
-export const getCartByUserId = async ({ userId } = {}) => {
+export const getCartByUserId = async (req, res) => {
 	try {
+		const userId = req.params.userId;
 		if (!userId) {
 			throw new Error('Invalid data');
 		}
@@ -10,13 +11,12 @@ export const getCartByUserId = async ({ userId } = {}) => {
 		const [data] = await connection.query(
 			`SELECT ci.user_id, ci.product_id, p.name, p.price, ci.quantity FROM cart_items ci JOIN products p ON ci.product_id = p.id WHERE user_id = ${userId}`
 		);
-		console.log(data);
+		res.status(200).json({ code: 200, data });
 	} catch (err) {
 		console.log(err);
+		res.status(500).json({ code: 500, message: err?.toString() });
 	}
 };
-
-// getCartByUserId({ userId: 2 });
 
 export const upsertCart = async (insertItem) => {
 	try {
@@ -64,15 +64,15 @@ export const upsertCart = async (insertItem) => {
 		}
 
 		const [data] = await connection.query(query);
-		console.log(data);
+
+		res.status(201).json({ code: 201, data });
 	} catch (err) {
 		console.log(err);
+		res.status(500).json({ code: 500, message: err?.toString() });
 	}
 };
 
-// upsertCart({ userId: 2, productId: 12, quantity: 2 });
-
-export const removeFromCart = async ({ userId, productId } = {}) => {
+export const deleteFromCart = async ({ userId, productId } = {}) => {
 	try {
 		if (!userId || !productId) {
 			throw new Error('Invalid data');
@@ -92,9 +92,9 @@ export const removeFromCart = async ({ userId, productId } = {}) => {
 			`DELETE FROM cart_items WHERE user_id = ${userId} AND product_id = ${productId}`
 		);
 		console.log(data);
+		res.status(204).json({ code: 204, data: 'deleted' });
 	} catch (err) {
 		console.log(err);
+		res.status(500).json({ code: 500, message: err?.toString() });
 	}
 };
-
-// removeFromCart({ userId: 2, productId: 7 });

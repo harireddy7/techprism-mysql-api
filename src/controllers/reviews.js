@@ -1,7 +1,8 @@
-import getConnection from '../db/connectToDB';
+import { getConnection } from '../db/connectToDB';
 
-export const getReviewsByProduct = async ({ productId } = {}) => {
+export const getReviewsByProduct = async (req, res) => {
 	try {
+		const productId = req.params.productId;
 		if (!productId) {
 			throw new Error('Invalid data');
 		}
@@ -9,9 +10,10 @@ export const getReviewsByProduct = async ({ productId } = {}) => {
 		const [data] = await connection.query(
 			`SELECT r.user_id, r.product_id, u.username, r.comment, r.rating FROM reviews r JOIN users u ON r.user_id = u.id WHERE product_id = ${productId}`
 		);
-		console.log(data);
+		res.status(200).json({ code: 200, data });
 	} catch (err) {
 		console.log(err);
+		res.status(500).json({ code: 500, message: err?.toString() });
 	}
 };
 
@@ -52,18 +54,13 @@ export const upsertReview = async ({
 		}
 
 		const [data] = await connection.query(query);
-		console.log(data);
+
+		res.status(201).json({ code: 201, data });
 	} catch (err) {
 		console.log(err);
+		res.status(500).json({ code: 500, message: err?.toString() });
 	}
 };
-
-// upsertReview({
-// 	userId: 2,
-// 	productId: 1,
-// 	comment: 'review for product 1 by user 2',
-// 	rating: 4.5,
-// });
 
 export const deleteReview = async ({ userId, productId } = {}) => {
 	try {
@@ -84,9 +81,9 @@ export const deleteReview = async ({ userId, productId } = {}) => {
 			`DELETE FROM reviews WHERE user_id = ${userId} AND product_id = ${productId}`
 		);
 		console.log(data);
+		res.status(204).json({ code: 204, data: 'deleted' });
 	} catch (err) {
 		console.log(err);
+		res.status(500).json({ code: 500, message: err?.toString() });
 	}
 };
-
-// deleteReview({	userId: 2, productId: 1 });
