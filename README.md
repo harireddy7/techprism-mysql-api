@@ -69,4 +69,4 @@ yarn dev
 
 ## Swagger Docs
 
-Swagger docs are available at [localhost:5000/api/v1/docs](localhost:5000/api/v1/docs)
+Swagger docs are available at [localhost:5000/api/v1/docs](http://localhost:5000/api/v1/docs)
