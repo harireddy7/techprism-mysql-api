@@ -18,11 +18,13 @@ export const getCartByUserId = async (req, res) => {
 	}
 };
 
-export const upsertCart = async (insertItem) => {
+const upsertCart = async (req, res) => {
 	try {
-		const { userId, productId, quantity } = insertItem || {};
+		const userId = +req.params.userId;
+		const productId = +req.params.productId;
+		const { quantity } = req.body || {};
+
 		// Before inserting, check following keys in the insert items
-		// cart_item --> userId, productId, quantity
 		// check userId, productId, quantity more than 0
 		if (
 			!userId ||
@@ -32,7 +34,7 @@ export const upsertCart = async (insertItem) => {
 			!quantity ||
 			quantity <= 0
 		) {
-			throw new Error('Invalid data, please check and try again!');
+			return res.status(400).json({ code: 400, message: 'Invalid data' });
 		}
 
 		const connection = await getConnection();
@@ -41,13 +43,15 @@ export const upsertCart = async (insertItem) => {
 		const [[user]] = await connection.query(
 			`SELECT * from users WHERE id = ${userId}`
 		);
-		if (!user) throw new Error('User not found!');
+		if (!user)
+			return res.status(400).json({ code: 400, message: 'User not found' });
 
 		// check productId exists
 		const [[product]] = await connection.query(
 			`SELECT * from products WHERE id = ${productId}`
 		);
-		if (!product) throw new Error('Product not found!');
+		if (!product)
+			return res.status(400).json({ code: 400, message: 'Product not found' });
 
 		// if product is already added to cart for this user, update quantity
 		// else insert item to cart
@@ -65,17 +69,26 @@ export const upsertCart = async (insertItem) => {
 
 		const [data] = await connection.query(query);
 
-		res.status(201).json({ code: 201, data });
+		const { insertId } = data || {};
+
+		res
+			.status(201)
+			.json({ code: 201, data: { userId, productId, quantity, id: insertId } });
 	} catch (err) {
 		console.log(err);
 		res.status(500).json({ code: 500, message: err?.toString() });
 	}
 };
 
-export const deleteFromCart = async ({ userId, productId } = {}) => {
+export const addToCart = upsertCart;
+
+export const updateCart = upsertCart;
+
+export const deleteFromCart = async (req, res) => {
 	try {
+		const { userId, productId } = req.params || {};
 		if (!userId || !productId) {
-			throw new Error('Invalid data');
+			return res.status(400).json({ code: 400, message: 'Invalid data' });
 		}
 		const connection = await getConnection();
 
@@ -85,13 +98,14 @@ export const deleteFromCart = async ({ userId, productId } = {}) => {
 			`SELECT * FROM cart_items WHERE user_id = ${userId} AND product_id = ${productId}`
 		);
 		if (!existingComboItem) {
-			throw new Error('data does not exist');
+			return res
+				.status(400)
+				.json({ code: 400, message: 'data does not exist' });
 		}
 
 		const [data] = await connection.query(
 			`DELETE FROM cart_items WHERE user_id = ${userId} AND product_id = ${productId}`
 		);
-		console.log(data);
 		res.status(204).json({ code: 204, data: 'deleted' });
 	} catch (err) {
 		console.log(err);

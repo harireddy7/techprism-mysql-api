@@ -1,7 +1,8 @@
 import express from 'express';
 import {
-	getReviewsByProduct,
-	upsertReview,
+	getReviewsByProductId,
+	createReview,
+	updateReview,
 	deleteReview,
 } from '../controllers/reviews';
 
@@ -9,10 +10,11 @@ const router = express.Router();
 
 // ROUTES
 router
-	.route('/:productId')
-	.get(getReviewsByProduct)
-	.post(upsertReview)
-	.put(upsertReview)
+	.route('/:productId/:userId')
+	.post(createReview)
+	.put(updateReview)
 	.delete(deleteReview);
+
+router.route('/:productId').get(getReviewsByProductId);
 
 export default router;

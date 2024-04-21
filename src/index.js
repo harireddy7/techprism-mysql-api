@@ -22,6 +22,8 @@ app.use(
 	})
 );
 
+app.use(express.json());
+
 app.use(`/api/${API_VERSION}`, apiRouter);
 
 app.use(`/api/${API_VERSION}`, (_, res) => {

@@ -1,6 +1,6 @@
 import { getConnection } from '../db/connectToDB';
 
-export const getReviewsByProduct = async (req, res) => {
+export const getReviewsByProductId = async (req, res) => {
 	try {
 		const productId = req.params.productId;
 		if (!productId) {
@@ -17,15 +17,11 @@ export const getReviewsByProduct = async (req, res) => {
 	}
 };
 
-// getReviewsByProduct({ productId: 10 })
-
-export const upsertReview = async ({
-	userId,
-	productId,
-	comment,
-	rating,
-} = {}) => {
+const upsertReview = async (req, res) => {
 	try {
+		const { comment, rating } = req.body || {};
+		const productId = +req.params.productId;
+		const userId = +req.params.userId;
 		if (
 			!userId ||
 			userId <= 0 ||
@@ -45,8 +41,6 @@ export const upsertReview = async ({
 			`SELECT * FROM reviews WHERE user_id = ${userId} AND product_id = ${productId}`
 		);
 
-		console.log(existingComboItem);
-
 		let query = `INSERT INTO reviews (user_id, product_id, comment, rating) VALUES(${userId}, ${productId}, '${comment}', ${rating})`;
 
 		if (existingComboItem) {
@@ -55,15 +49,27 @@ export const upsertReview = async ({
 
 		const [data] = await connection.query(query);
 
-		res.status(201).json({ code: 201, data });
+		const { insertId } = data || {};
+
+		res.status(201).json({
+			code: 201,
+			data: { userId, productId, comment, rating, id: insertId },
+		});
 	} catch (err) {
 		console.log(err);
 		res.status(500).json({ code: 500, message: err?.toString() });
 	}
 };
 
-export const deleteReview = async ({ userId, productId } = {}) => {
+export const createReview = upsertReview;
+
+export const updateReview = upsertReview;
+
+export const deleteReview = async (req, res) => {
 	try {
+		const productId = req.params.productId;
+		const userId = req.params.userId;
+
 		if (!userId || !productId) {
 			throw new Error('Invalid data');
 		}
